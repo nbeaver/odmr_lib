@@ -2,9 +2,9 @@
 # coding: utf-8
 
 import os.path
-import glob
 import numpy as np
 import math
+import matplotlib.pyplot as plt
 
 # Function definitions
 #
@@ -16,6 +16,9 @@ def closest_index(arr, val):
     index = np.argmin(abs(arr - val)) # TODO: use binary search or something else?
     return index
 
+def dBm_to_mW(power_dBm):
+    power_mW = np.power(10,(power_dBm)/10)
+    return power_mW
 
 def do_deletions(sweeps, delete):
     if delete is None:
@@ -24,14 +27,6 @@ def do_deletions(sweeps, delete):
         filtered = np.delete(sweeps, obj=delete, axis=0)
     return filtered
     
-def estimate_baseline(sweeps, n_points=10):
-    avg = sweeps.mean(axis=0)
-    N = int(n_points/2)
-    first = avg[:N].mean()
-    last = avg[-N:].mean()
-    baseline = (first + last)/2.
-    return baseline
-
 def estimate_baseline(sweeps, n_points=10):
     avg = sweeps.mean(axis=0)
     N = int(n_points/2)
@@ -129,6 +124,8 @@ def estimate_stderr(sweeps, i):
     N = len(arr_slice)
     stderr = stdev/np.sqrt(N)
     return stderr
+
+
 def estimate_stderr_at_f1(sweeps, freq, f1, ):
     i1 = closest_index(freq, f1)
     if i1 is None:
@@ -387,12 +384,20 @@ def get_step(vals):
         # TODO: should we return None or np.nan for a non-uniform step?
         raise ValueError('non-uniform step')
 
+def get_var_vals(var_name, start, stop, numdivs):
+    if var_name == 'itr':
+        vals = list(range(numdivs))
+    else:
+        vals = np.linspace(start, stop, numdivs+1)
 
 def get_yaml_filename(mat_filename):
     root, ext = os.path.splitext(mat_filename)
     yaml_filename = root + '.yaml'
     return yaml_filename
 
+def mW_to_dBm(power_mW):
+    power_dBm = 10*np.log10(power_mW)
+    return power_dBm
 
 def parse_princeton_mat_file(mat_dict):
     class ODMR:
@@ -412,8 +417,13 @@ def parse_princeton_mat_file(mat_dict):
     
     return odmr
 
-
-def parse_princeton_val(coefficient, prefix):
+def parse_princeton_val_with_prefix(coefficient, prefix):
+    class ValueWithPrefix:
+        def __eq__(self, other):
+            if self.value == other.value:
+                return True
+            else:
+                return False
     exponents = {
         'G' : 1e9,
         'M' : 1e6,
@@ -425,21 +435,26 @@ def parse_princeton_val(coefficient, prefix):
     }
     if prefix not in exponents:
         raise ValueError("unrecognized prefix: '{}''".format(prefix))
-    value = coefficient * exponents[prefix]
-    return value
+    value_object = ValueWithPrefix()
+    value_object.value = coefficient * exponents[prefix]
+    value_object.coefficient = coefficient
+    value_object.prefix = prefix
+    value_object.exponent = exponents[prefix]
+    return value_object
 
-def plot_fit(info):
+def plot_fit(info, plot_unc_band=True):
     class FigureInfo:
         pass
     GHz = 1e-9 # Hz to GHz
     fig, ax = plt.subplots(constrained_layout=True)
-    ax.fill_between(
-        info.x*GHz,
-        fit.best_fit - fit_unc,
-        fit.best_fit + fit_unc,
-        color="#ABABAB",
-        label='3$\sigma$ uncertainty band'
-    )
+    if plot_unc_band:
+        ax.fill_between(
+            info.x*GHz,
+            info.fit.best_fit - info.fit_info.fit_unc,
+            info.fit.best_fit + info.fit_info.fit_unc,
+            color="#ABABAB",
+            label='3$\sigma$ uncertainty band'
+        )
     ax.plot(
         info.x*GHz,
         info.y,
@@ -547,6 +562,32 @@ def plot_n_components(info, n=None):
     return figinfo
 
 
+def reduce_identical_vals(d):
+    """
+    Return the first value of a dict
+    provided all the values are equal.
+    """
+    val1 = next(iter(d.values()))
+    all_same = all([d[key] == val1 for key in d.keys()])
+    if all_same == True:
+        return val1
+    else:
+        raise ValueError("dict has disparate values")
+
+
+def reduce_identical_array_vals(d):
+    """
+    Return the first value of a dict
+    provided all the values are equal
+    and are numpy arrays.
+    """
+    val1 = next(iter(d.values()))
+    all_same = all([np.array_equal(d[key], val1) for key in d.keys()])
+    if all_same == True:
+        return val1
+    else:
+        raise ValueError("dict has disparate values")
+
 def remove_suffix(text, suffix):
     if text.endswith(suffix):
         return text[:-len(suffix)]
@@ -554,8 +595,9 @@ def remove_suffix(text, suffix):
         return text
 
 
-def yield_odmr_mat_paths(folder):
-    odmr_pattern = os.path.join(folder, "PLmw1freq*.mat")
+def yield_odmr_mat_paths(folder, pattern="PLmw1freq*.mat"):
+    import glob
+    odmr_pattern = os.path.join(folder, pattern)
     paths = glob.glob(odmr_pattern)
     for path in paths:
         yield path
