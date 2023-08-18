@@ -409,11 +409,15 @@ def parse_princeton_mat_file(mat_dict):
     odmr._mat_version = mat_dict['__version__']
     odmr._mat_globals = mat_dict['__globals__']
     
-    odmr.freq = get_arr1d(mat_dict['xvals'])
+    odmr.xvals = get_arr1d(mat_dict['xvals'])
+    odmr.freq = odmr.xvals
     
-    odmr.norm_raw = get_arr2d(mat_dict['pl'])
-    odmr.signal_raw = get_arr2d(mat_dict['sig'])
-    odmr.reference_raw = get_arr2d(mat_dict['ref'])
+    odmr.pl = get_arr2d(mat_dict['pl'])
+    odmr.norm_raw = odmr.pl
+    odmr.sig = get_arr2d(mat_dict['sig'])
+    odmr.signal_raw = odmr.sig
+    odmr.ref = get_arr2d(mat_dict['ref'])
+    odmr.reference_raw = odmr.ref
     
     return odmr
 
