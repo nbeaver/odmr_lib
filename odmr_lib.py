@@ -420,6 +420,11 @@ def parse_princeton_mat_file(mat_dict):
     odmr._mat_globals = mat_dict['__globals__']
     
     odmr.xvals = get_arr1d(mat_dict['xvals'])
+    try:
+        odmr.yvals = get_arr1d(mat_dict['yvals'])
+    except KeyError:
+        odmr.yvals = None
+
     odmr.freq = odmr.xvals
     
     odmr.pl = get_arr2d(mat_dict['pl'])
