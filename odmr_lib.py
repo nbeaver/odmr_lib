@@ -409,7 +409,10 @@ def mW_to_dBm(power_mW):
 def parse_princeton_mat_file(mat_dict):
     class ODMR:
         # Simple container class.
-        pass
+        def __repr__(self):
+            return "ODMR " + str(list(self.__dict__.keys()))
+        def __str__(self):
+            return "ODMR " + str(list(self.__dict__.keys()))
     odmr = ODMR()
     
     odmr._mat_header = mat_dict['__header__']
@@ -435,6 +438,10 @@ def parse_princeton_val_with_prefix(coefficient, prefix):
                 return True
             else:
                 return False
+        def __str__(self):
+            return "ValueWithPrefix {} = {} '{}'".format(self.value, self.coefficient, self.prefix)
+        def __repr__(self):
+            return "ValueWithPrefix {} = {} '{}'".format(self.value, self.coefficient, self.prefix)
     exponents = {
         'G' : 1e9,
         'M' : 1e6,
