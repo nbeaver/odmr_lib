@@ -375,14 +375,21 @@ def get_running_avg_stderr(sweeps, index):
     return running_avg, running_stderr
 
 
-def get_step(vals):
-    step1 = vals[1]-vals[0]
-    step2 = vals[2]-vals[1]
-    if step1 == step2:
-        return step1
-    else:
-        # TODO: should we return None or np.nan for a non-uniform step?
+def get_step(vals, tolerance=None):
+    diff = np.diff(vals)
+    steps = np.unique(vals)
+    if len(steps) == 1:
+        return steps[0]
+    elif tolerance is None:
         raise ValueError('non-uniform step')
+    else:
+        mean = np.mean(diff)
+        deviations = diff - mean
+        max_deviation = np.max(deviations)
+        if max_deviation < tolerance:
+            return mean
+        else:
+            raise ValueError("max deviation > tolerance: {} > {}".format(max_deviation, tolerance))
 
 def get_var_vals(var_name, start, stop, numdivs):
     if var_name == 'itr':
