@@ -26,7 +26,7 @@ def do_deletions(sweeps, delete):
     else:
         filtered = np.delete(sweeps, obj=delete, axis=0)
     return filtered
-    
+
 def estimate_baseline(sweeps, n_points=10):
     avg = sweeps.mean(axis=0)
     N = int(n_points/2)
@@ -152,7 +152,7 @@ def filter_sweeps(sweeps_raw, use_raw=False, skip_last_sweep=False, delete=None)
 
 def fit_n_lorentzians(n, x, y, param_guesses, vary_center=True, vary_bkg=True):
     from lmfit.models import LorentzianModel, ConstantModel
-    
+
 
     def get_baseline_guess(y, n_points=10):
         N = int(n_points/2)
@@ -160,14 +160,14 @@ def fit_n_lorentzians(n, x, y, param_guesses, vary_center=True, vary_bkg=True):
         last = y[-N:].mean()
         baseline = (first + last)/2.
         return baseline
-    
+
     def get_amplitude_guess(sigma, y_peak, y_background):
         import math
         return math.pi*sigma*(y_peak-y_background)
 
     # guesses
     guess_c = get_baseline_guess(y)
-    
+
     guess_center = {}
     guess_sigma = {}
     guess_dipmin = {}
@@ -205,7 +205,7 @@ def fit_n_lorentzians(n, x, y, param_guesses, vary_center=True, vary_bkg=True):
         )
         params_lorentzian[i] = dip[i].make_params()
         params.update(params_lorentzian[i])
-    
+
     # constraints
     params["constant_c"].set(
         vary=vary_bkg,
@@ -437,11 +437,11 @@ def parse_princeton_mat_file(mat_dict):
         def __str__(self):
             return "ODMR " + str(list(self.__dict__.keys()))
     odmr = ODMR()
-    
+
     odmr._mat_header = mat_dict['__header__']
     odmr._mat_version = mat_dict['__version__']
     odmr._mat_globals = mat_dict['__globals__']
-    
+
     odmr.xvals = get_arr1d(mat_dict['xvals'])
     try:
         odmr.yvals = get_arr1d(mat_dict['yvals'])
@@ -449,14 +449,14 @@ def parse_princeton_mat_file(mat_dict):
         odmr.yvals = None
 
     odmr.freq = odmr.xvals
-    
+
     odmr.pl = get_arr2d(mat_dict['pl'])
     odmr.norm_raw = odmr.pl
     odmr.sig = get_arr2d(mat_dict['sig'])
     odmr.signal_raw = odmr.sig
     odmr.ref = get_arr2d(mat_dict['ref'])
     odmr.reference_raw = odmr.ref
-    
+
     return odmr
 
 def parse_princeton_val_with_prefix(coefficient, prefix):
