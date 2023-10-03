@@ -406,6 +406,29 @@ def mW_to_dBm(power_mW):
     power_dBm = 10*np.log10(power_mW)
     return power_dBm
 
+def order_arr2d_by_xy(x, y, arr2d):
+    if x[-1] > x[0]:
+        # Normal case, increasing x.
+        x_ordered = x
+        arr2d_ordered_lr = arr2d
+    elif x[0] > x[-1]:
+        # Reverse case, decreasing x.
+        x_ordered = np.flip(x)
+        arr2d_ordered_lr = np.fliplr(arr2d)
+    else:
+        raise ValueError("unorderable: {}, {}".format(x[0], x[-1]))
+    if y[-1] > y[0]:
+        # Normal case, increasing y.
+        y_ordered = y
+        arr2d_ordered = arr2d_ordered_lr
+    elif y[0] > y[-1]:
+        # Reverse case, decreasing y.
+        y_ordered = np.flip(y)
+        arr2d_ordered = np.flipud(arr2d_ordered_lr)
+    else:
+        raise ValueError("unorderable: {}, {}".format(y[0], y[-1]))
+    return x_ordered, y_ordered, arr2d_ordered
+
 def parse_princeton_mat_file(mat_dict):
     class ODMR:
         # Simple container class.
