@@ -11,8 +11,10 @@ import matplotlib.pyplot as plt
 # In alphanumeric order for ease of diffing.
 
 def closest_index(arr, val):
-    if val > arr.max() or val < arr.min():
-        return None
+    if val > arr.max():
+        raise ValueError("not in range: {} > {}".format(val, arr.max()))
+    elif val < arr.min():
+        raise ValueError("not in range: {} < {}".format(val, arr.min()))
     index = np.argmin(abs(arr - val)) # TODO: use binary search or something else?
     return index
 
