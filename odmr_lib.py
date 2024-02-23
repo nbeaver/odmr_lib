@@ -611,6 +611,12 @@ def plot_n_components(info, n=None):
     figinfo.ax = ax
     return figinfo
 
+def reduce_identical_vals_list(l):
+    first = l[0]
+    if all(first == x for x in l):
+        return first
+    else:
+        raise ValueError
 
 def reduce_identical_vals(d):
     """
