@@ -332,7 +332,7 @@ def get_arr1d(arr2d):
     elif d2 == 1 and d1 > 1:
         arr1d = arr2d.reshape(d1)
     else:
-        raise ValueError("cannot cast 2D array with shape '{}'".format(arr2d.shape))
+        raise ValueError("cannot cast 2D array with shape '{}' to 1D array".format(arr2d.shape))
     return arr1d
 
 
