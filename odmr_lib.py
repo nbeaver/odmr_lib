@@ -151,8 +151,89 @@ def filter_sweeps(sweeps_raw, use_raw=False, skip_last_sweep=False, delete=None)
         good_sweeps = sweeps
     return good_sweeps
 
+# TODO: make a different function that can take an lmfit fit.params object
+# directly as param guesses, and can also take an object with attributes like:
+# param_info.value, param_info.min, param_info.max, param_info.vary, param_info.weights
+def fit_n_gaussians(n, x, y, param_guesses, vary_center=True, vary_bkg=True):
+    # TODO: warn if any parameters are at their minimum or maximum values
+    from lmfit.models import GaussianModel, ConstantModel
 
+    def get_baseline_guess(y, n_points=10):
+        N = int(n_points/2)
+        first = y[:N].mean()
+        last = y[-N:].mean()
+        baseline = (first + last)/2.
+        return baseline
+
+    def get_amplitude_guess(sigma, y_peak, y_background):
+        from math import pi, sqrt
+        return sqrt(2*pi)*sigma*(y_peak-y_background)
+
+    # guesses
+    guess_c = get_baseline_guess(y)
+
+    guess_center = {}
+    guess_sigma = {}
+    guess_dipmin = {}
+    guess_amplitude = {}
+    for i in range(n):
+        guess_center[i] = param_guesses["g{}_center".format(i)]
+        guess_sigma[i] = param_guesses["g{}_sigma".format(i)]
+        guess_dipmin[i] = param_guesses["g{}_dipmin".format(i)]
+        guess_amplitude[i] = get_amplitude_guess(guess_sigma[i], guess_dipmin[i], guess_c)
+
+    background = ConstantModel(prefix="constant_")
+    if 'offset' in param_guesses:
+        background.set_param_hint('constant_c', value=param_guesses['offset'])
+    # params
+    params = background.make_params(
+        constant_c=guess_c
+    )
+    dip = {}
+    prefix = {}
+    params_gaussian = {}
+    for i in range(n):
+        prefix[i] = "g{}_".format(i)
+        dip[i] = GaussianModel(prefix=prefix[i])
+        dip[i].set_param_hint(
+            '{}center'.format(prefix[i]),
+            value=guess_center[i]
+        )
+        dip[i].set_param_hint(
+            '{}sigma'.format(prefix[i]),
+            value=guess_sigma[i]
+        )
+        dip[i].set_param_hint(
+            '{}amplitude'.format(prefix[i]),
+            value=guess_amplitude[i]
+        )
+        params_gaussian[i] = dip[i].make_params()
+        params.update(params_gaussian[i])
+
+    # constraints
+    params["constant_c"].set(
+        vary=vary_bkg,
+    )
+    dx = {}
+    for i in range(n):
+        dx[i] = guess_sigma[i]/2
+        params["g{}_center".format(i)].set(
+            vary=vary_center,
+        )
+
+    # model
+    model = background
+    for single_dip in dip.values():
+        model += single_dip
+    init = model.eval(params, x=x)
+    fit_result = model.fit(y, params, x=x)
+    return fit_result
+
+# TODO: make a different function that can take an lmfit fit.params object
+# directly as param guesses, and can also take an object with attributes like:
+# param_info.value, param_info.min, param_info.max, param_info.vary, param_info.weights
 def fit_n_lorentzians(n, x, y, param_guesses, vary_center=True, vary_bkg=True):
+    # TODO: warn if any parameters are at their minimum or maximum values
     from lmfit.models import LorentzianModel, ConstantModel
 
 
