@@ -308,18 +308,12 @@ def fit_n_lorentzians(n, x, y, param_guesses, vary_center=True, vary_bkg=True):
     fit_result = model.fit(y, params, x=x)
     return fit_result
 
-def get_scalar(arr2d):
+def get_scalar(arr):
     """
     If there's only one value,
     cast it to a scalar.
     """
-    d1, d2 = arr2d.shape
-    if d1 == 1 and d2 == 1:
-        arr1d, = arr2d
-        scalar, = arr1d
-    else:
-        raise ValueError("cannot cast 2D array with shape '{}' to scalar, must be (1,1)".format(arr2d.shape))
-    return scalar
+    return arr.item()
 
 def get_arr1d(arr2d):
     """
