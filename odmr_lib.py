@@ -589,11 +589,11 @@ def parse_princeton_val_with_prefix(coefficient, prefix):
     value_object.exponent = exponents[prefix]
     return value_object
 
-def plot_fit(info, plot_unc_band=True):
-    class FigureInfo:
-        pass
+def plot_fit(info, plot_unc_band=True, plot_args=None):
+    if plot_args is None:
+        plot_args = {}
     GHz = 1e-9 # Hz to GHz
-    fig, ax = plt.subplots(constrained_layout=True)
+    fig, ax = plt.subplots(constrained_layout=True, **plot_args)
     if plot_unc_band:
         ax.fill_between(
             info.x*GHz,
@@ -622,9 +622,11 @@ def plot_fit(info, plot_unc_band=True):
     return figinfo
 
 
-def plot_initial_fit(info):
+def plot_initial_fit(info, plot_args=None):
+    if plot_args is None:
+        plot_args = {}
     GHz = 1e-9 # Hz to GHz
-    fig, ax = plt.subplots(constrained_layout=True)
+    fig, ax = plt.subplots(constrained_layout=True, **plot_args)
     ax.plot(info.x*GHz, info.y, '.-');
     ax.plot(info.x*GHz, info.fit.init_fit, 'b-', label="initial fit") # initial fit
     ax.plot(info.x*GHz, info.fit.best_fit, 'r-', label="final fit")
@@ -636,10 +638,12 @@ def plot_initial_fit(info):
     return figinfo
 
 
-def plot_initial_fit_with_n_components(info):
+def plot_initial_fit_with_n_components(info, plot_args=None):
+    if plot_args is None:
+        plot_args = {}
     # TODO: add initial fit components
     GHz = 1e-9 # Hz to GHz
-    fig, ax = plt.subplots(constrained_layout=True)
+    fig, ax = plt.subplots(constrained_layout=True, **plot_args)
     ax.plot(info.x*GHz, info.y, '.-');
     ax.plot(info.x*GHz, info.fit.init_fit, 'b-', label="initial fit") # initial fit
     ax.plot(info.x*GHz, info.fit.best_fit, 'r-', label="final fit")
@@ -651,14 +655,16 @@ def plot_initial_fit_with_n_components(info):
     return figinfo
 
 
-def plot_points_vs_sweep(sweeps):
+def plot_points_vs_sweep(sweeps, plot_args=None):
+    if plot_args is None:
+        plot_args = {}
     n_sweeps, n_points = sweeps.shape
     sweeps_avg = sweeps.mean(axis=0)
     N_avg = [1 + x for x in range(n_sweeps)]
     first, first_stderr = get_running_avg_stderr(sweeps, 0)
     last, last_stderr = get_running_avg_stderr(sweeps, -1)
     minim, minim_stderr = get_running_avg_stderr(sweeps, np.argmin(sweeps_avg))
-    fig, ax = plt.subplots(constrained_layout=True)
+    fig, ax = plt.subplots(constrained_layout=True, **plot_args)
     ax.errorbar(N_avg, first, fmt='.', yerr=first_stderr, label="first");
     ax.errorbar(N_avg, last, fmt='.', yerr=last_stderr, label="last");
     ax.errorbar(N_avg, minim, fmt='.', yerr=minim_stderr, label="minimum");
@@ -666,8 +672,10 @@ def plot_points_vs_sweep(sweeps):
     return fig, ax
 
 
-def plot_residuals(info, n_stderr=1):
-    fig, ax = plt.subplots(constrained_layout=True)
+def plot_residuals(info, n_stderr=1, plot_args=None):
+    if plot_args is None:
+        plot_args = {}
+    fig, ax = plt.subplots(constrained_layout=True, **plot_args)
     GHz = 1e-9 # Hz to GHz
     ax.plot(info.x*GHz, info.y_residuals, '.-', label="residuals")
     ax.scatter(info.x*GHz, info.y_stderr, marker='.', color="black", label="stderr");
@@ -685,13 +693,15 @@ def plot_residuals(info, n_stderr=1):
     return figinfo
 
 
-def plot_n_components(info, n=None):
+def plot_n_components(info, n=None, plot_args=None):
     if n is None:
         N_lorentz = info.n_lorentzians
     else:
         N_lorentz = n
+    if plot_args is None:
+        plot_args = {}
     GHz = 1e-9 # Hz to GHz
-    fig, ax = plt.subplots(constrained_layout=True)
+    fig, ax = plt.subplots(constrained_layout=True, **plot_args)
     ax.plot(info.x*GHz, info.y, '.-');
     y0 = info.fit_components['constant_']
     ax.axhline(y0, linestyle='--', color="gray", label="constant")
