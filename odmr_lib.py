@@ -6,6 +6,22 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 
+# Class definitions.
+#
+# In alphanumeric order for ease of diffing.
+
+class FigureInfo:
+    def __repr__(self):
+        return self.__class__.__name__ + '(' + str(list(self.__dict__.keys())) + ')'
+    def __str__(self):
+        return self.__class__.__name__ + '(' + str(list(self.__dict__.keys())) + ')'
+
+class ODMR:
+    def __repr__(self):
+        return self.__class__.__name__ + '(' + str(list(self.__dict__.keys())) + ')'
+    def __str__(self):
+        return self.__class__.__name__ + '(' + str(list(self.__dict__.keys())) + ')'
+
 # Function definitions
 #
 # In alphanumeric order for ease of diffing.
@@ -521,12 +537,6 @@ def order_arr2d_by_xy(x, y, arr2d):
     return x_ordered, y_ordered, arr2d_ordered
 
 def parse_princeton_mat_file(mat_dict):
-    class ODMR:
-        # Simple container class.
-        def __repr__(self):
-            return "ODMR " + str(list(self.__dict__.keys()))
-        def __str__(self):
-            return "ODMR " + str(list(self.__dict__.keys()))
     odmr = ODMR()
 
     odmr._mat_header = mat_dict['__header__']
