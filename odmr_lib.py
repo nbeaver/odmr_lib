@@ -602,6 +602,7 @@ def plot_fit(info, plot_unc_band=True, plot_args=None):
             color="#ABABAB",
             label='3$\sigma$ uncertainty band'
         )
+    # TODO: change this so it uses info.x instead.
     ax.plot(
         info.x*GHz,
         info.y,
@@ -613,6 +614,7 @@ def plot_fit(info, plot_unc_band=True, plot_args=None):
         'r-',
         label=info.fit_label,
     )
+    # TODO: change this so it uses info.xlabel and info.ylabel instead.
     ax.set_xlabel("microwave frequency [GHz]")
     ax.set_ylabel("normalized fluorescence [dimensionless]")
     ax.legend()
@@ -630,8 +632,6 @@ def plot_initial_fit(info, plot_args=None):
     ax.plot(info.x*GHz, info.y, '.-');
     ax.plot(info.x*GHz, info.fit.init_fit, 'b-', label="initial fit") # initial fit
     ax.plot(info.x*GHz, info.fit.best_fit, 'r-', label="final fit")
-    class FigureInfo:
-        pass
     figinfo = FigureInfo()
     figinfo.fig = fig
     figinfo.ax = ax
@@ -647,8 +647,6 @@ def plot_initial_fit_with_n_components(info, plot_args=None):
     ax.plot(info.x*GHz, info.y, '.-');
     ax.plot(info.x*GHz, info.fit.init_fit, 'b-', label="initial fit") # initial fit
     ax.plot(info.x*GHz, info.fit.best_fit, 'r-', label="final fit")
-    class FigureInfo:
-        pass
     figinfo = FigureInfo()
     figinfo.fig = fig
     figinfo.ax = ax
@@ -685,8 +683,6 @@ def plot_residuals(info, n_stderr=1, plot_args=None):
         ax.scatter(info.x*GHz, -2*info.y_stderr, marker='.', color="red");
     elif n_stderr not in [1, 2]:
         raise ValueError
-    class FigureInfo:
-        pass
     figinfo = FigureInfo()
     figinfo.fig = fig
     figinfo.ax = ax
@@ -711,8 +707,6 @@ def plot_n_components(info, n=None, plot_args=None):
             info.fit_components['l{}_'.format(i)] + y0,
             label="{}".format(i))
     ax.plot(info.x*GHz, info.fit.best_fit, 'r-', label="final fit")
-    class FigureInfo:
-        pass
     figinfo = FigureInfo()
     figinfo.fig = fig
     figinfo.ax = ax
@@ -764,4 +758,3 @@ def yield_odmr_mat_paths(folder, pattern="PLmw1freq*.mat"):
     paths = glob.glob(odmr_pattern)
     for path in paths:
         yield path
-
