@@ -334,14 +334,49 @@ def fit_n_lorentzians(n, x, y, param_guesses, vary_center=True, vary_bkg=True):
     fit_result = model.fit(y, params, x=x)
     return fit_result
 
+def get_B_from_2_peaks(nu1, nu2, E, D=None, g=None):
+    """ Get the magentic bias field from 2 ODMR peak frequencies.
 
-def get_scalar(arr):
-    """
-    If there's only one value,
-    cast it to a scalar.
-    """
-    return arr.item()
+    For cw-ODMR:
+    H = μ g (B∙S) + D S_z² + E(S_x² - S_y²)
+    (g μ B h)² = β² = ⅓ (ν₁² + ν₂² - ν₁ν₂ - D²)-E²
+    https://doi.org/10.1038/nature07278
+    https://www.nature.com/articles/nature07278
 
+    Parameters
+    ------------
+        nu1: float
+            1st frequency in Hz (not rad/s)
+        nu2: float
+            2nd frequency in Hz (not rad/s)
+        E: float
+            Strain parameter (zero bias field) in Hz
+        D: float, optional
+            Zero field splitting in Hz (default 2.87 GHz)
+        g: float, optional
+            g-factor for NV center, usually 2.0023
+
+    Return
+    -----------
+        B : float
+            The magnetic bias field in tesla.
+    """
+    import numpy as np
+    GHz = 1e9
+    # Plank constant.
+    h =  6.62607015e-34 # J s
+    # Bohr magneton eħ/(2m_e)
+    muB = 9.2740101e-24 # A m^2
+    if g is None:
+        # electron g-factor
+        g = 2.002319304
+    if D is None:
+        D = 2.87*GHz
+    beta_squared = (1/3.)*(nu1**2 + nu2**2 - nu1*nu2 - D**2) - E**2
+    # nu is in units of Hz, if we had omega1 in units of rad/s
+    # we would use hbar/(g*muB) instead.
+    B = (h/(g*muB))*np.sqrt(beta_squared)
+    return B
 
 def get_arr1d(arr2d):
     """
@@ -498,6 +533,34 @@ def get_running_avg_stderr(sweeps, index):
         running_stderr[i] = stdev / np.sqrt(n)
     return running_avg, running_stderr
 
+def get_scalar(arr):
+    """
+    If there's only one value,
+    cast it to a scalar.
+    """
+    return arr.item()
+
+def get_sensitivity_temp_NV_cw_odmr(linewidth_Hz, contrast, photon_counts_per_second, dD_over_dT=None):
+    import numpy as np
+    # For cw-ODMR:
+    #          Δω       1
+    # η_T = ――――――― ―――――――――――
+    #       |dD/dT| C sqrt(L)
+    # where
+    # η_T = temperature sensitivity [K/sqrt(Hz)]
+    # Δω = cw-ODMR linewidth [Hz]
+    # dD/dT = change of D parameter with temp at room temperature []
+    # C = cw-ODMR contrast [A.U.]
+    # L = count rate [counts/second]
+    # https://www.nature.com/articles/s41598-021-83285-y
+
+    if dD_over_dT is None:
+        dD_over_dT = -75.0e3 # Hz/K
+    # Not -74.2 kHz/K, see https://doi.org/10.1103/PhysRevLett.106.209901
+    abs_dD_over_dT = np.abs(dD_over_dT)
+    abs_contrast = np.abs(contrast)
+    eta_T = linewidth_Hz/(abs_dD_over_dT*abs_contrast*np.sqrt(photon_counts_per_second))
+    return eta_T
 
 def get_step(vals, tolerance=None):
     diff = np.diff(vals)
