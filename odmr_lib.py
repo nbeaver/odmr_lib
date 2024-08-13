@@ -176,6 +176,51 @@ def estimate_stderr_at_f1(
     stderr = estimate_stderr(sweeps, i1)
     return stderr
 
+# TODO: split this up into path generation and filtering functions.
+def filter_paths_by_index(candidate_paths, index_range, skip_last=False, debug=False):
+    index_lower, index_upper = index_range
+    if index_lower is not None:
+        assert type(index_lower) == int
+    if index_upper is not None:
+        assert type(index_upper) == int
+    all_indices = []
+    all_paths = []
+    index_to_path = {}
+    for i, path in enumerate(candidate_paths):
+        all_paths.append(path)
+        this_index = get_logical_index(path)
+        all_indices.append(this_index)
+        index_to_path[this_index] = path
+    del(i, path)
+    selected_paths = []
+    selected_indices = []
+    indices_order = sorted(all_indices)
+    last_index = indices_order[-1]
+    for this_index in indices_order:
+        path = index_to_path[this_index]
+        if this_index in index_skip:
+            if debug:
+                print("in index_skip: {}".format(this_index))
+            continue
+        if index_lower is not None:
+            if this_index < index_lower:
+                # skip this one
+                if debug:
+                    print(this_index, ' < ', index_lower)
+                continue
+        if index_upper is not None:
+            if this_index > index_upper:
+                if debug:
+                    print(this_index, ' > ', index_upper)
+                # skip this one
+                continue
+        if skip_last and this_index == last_index:
+            if debug:
+                print("skipping last file: {}".format(path))
+            continue
+        selected_indices.append(this_index)
+        selected_paths.append(path)
+    return selected_paths
 
 def filter_sweeps(sweeps_raw, use_raw=False, skip_last_sweep=False, delete=None):
     filtered = do_deletions(sweeps_raw, delete)
