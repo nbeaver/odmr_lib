@@ -428,6 +428,7 @@ def get_arr1d(arr2d):
     If there's only one sweep,
     cast it to a 1D array.
     """
+    # TODO: can this be replaced by numpy.squeeze?
     d1, d2 = arr2d.shape
     if d1 == 1 and d2 > 1:
         arr1d = arr2d.reshape(d2)
@@ -683,9 +684,9 @@ def parse_princeton_mat_file(mat_dict):
     odmr._mat_version = mat_dict["__version__"]
     odmr._mat_globals = mat_dict["__globals__"]
 
-    odmr.xvals = get_arr1d(mat_dict["xvals"])
+    odmr.xvals = np.squeeze(mat_dict["xvals"])
     try:
-        odmr.yvals = get_arr1d(mat_dict["yvals"])
+        odmr.yvals = np.squeeze(mat_dict["yvals"])
     except KeyError:
         odmr.yvals = None
 
