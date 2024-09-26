@@ -639,6 +639,14 @@ def get_yaml_filename(mat_filename):
     return yaml_filename
 
 
+def get_0_to_1(y_arr):
+    # For e.g. comparing ODMR lineshapes with different contrast.
+    ymin = y.min()
+    amp = 1-y.min()
+    y_0_to_1 = (y_arr - ymin)/amp
+    return y_0_to_1
+
+
 def mW_to_dBm(power_mW):
     power_dBm = 10 * np.log10(power_mW)
     return power_dBm
