@@ -612,22 +612,27 @@ def get_sensitivity_temp_NV_cw_odmr(linewidth_Hz, contrast, photon_counts_per_se
     eta_T = linewidth_Hz/(abs_dD_over_dT*abs_contrast*np.sqrt(photon_counts_per_second))
     return eta_T
 
-def get_step(vals, tolerance=None):
+
+def get_step(vals, rtol=1e-05, atol=1e-08, equal_nan=False):
     diff = np.diff(vals)
-    steps = np.unique(vals)
-    if len(steps) == 1:
+    mean = np.mean(diff)
+    unique = np.unique(diff)
+    n_unique = unique.shape
+    if n_unique == 1:
         return steps[0]
-    elif tolerance is None:
-        raise ValueError("non-uniform step")
     else:
-        mean = np.mean(diff)
-        deviations = diff - mean
-        max_deviation = np.max(deviations)
-        if max_deviation < tolerance:
+        diff1 = unique[0]
+        is_close = np.isclose(diff1, unique, rtol=rtol, atol=atol, equal_nan=equal_nan)
+        if all(is_close):
             return mean
         else:
+            deviants = unique[np.where(is_close == False)]
+            if len(deviants) < 4:
+                deviant_str = str(deviants)
+            else:
+                deviant_str = "{}...".format(deviants[:3])
             raise ValueError(
-                "max deviation > tolerance: {} > {}".format(max_deviation, tolerance)
+                "non-uniform step: {} != {}".format(diff1, deviant_str)
             )
 
 
