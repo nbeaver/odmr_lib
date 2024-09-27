@@ -657,6 +657,12 @@ def get_0_to_1(y_arr):
     return y_0_to_1
 
 
+def get_zero_padded(y_arr):
+    zeros = np.zeros(int(len(y_arr) * 2))
+    y_pad = zeros[:len(y_arr)] = y_arr
+    return y_pad
+
+
 def mW_to_dBm(power_mW):
     power_dBm = 10 * np.log10(power_mW)
     return power_dBm
