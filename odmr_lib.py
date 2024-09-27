@@ -480,13 +480,17 @@ def get_freq_of_min(sweeps, freq):
     return freq_of_min
 
 
-def get_i_slice_end(sweeps):
+def get_i_slice_end(sweeps_raw, transpose=False):
     """
     For an ODMR scan stopped early,
     there will sometimes be a NaN value.
     The following values and sweeps will be all 1s.
     """
-    n_points, n_sweeps = sweeps.shape
+    if transpose:
+        sweeps = np.transpose(sweeps_raw)
+    else:
+        sweeps = sweeps_raw
+    n_sweeps, n_points = sweeps.shape
     i_max = n_sweeps
     for i, sweep in enumerate(sweeps):
         if any(np.isnan(sweep)):
