@@ -613,7 +613,9 @@ def get_sensitivity_temp_NV_cw_odmr(linewidth_Hz, contrast, photon_counts_per_se
     return eta_T
 
 
-def get_step(vals, rtol=1e-05, atol=1e-08, equal_nan=False):
+def get_step(vals, rtol=1e-05, atol=1e-08, equal_nan=False, tolerance=None):
+    if tolerance is not None:
+        atol = tolerance
     diff = np.diff(vals)
     mean = np.mean(diff)
     unique = np.unique(diff)
