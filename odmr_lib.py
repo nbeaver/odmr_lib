@@ -923,6 +923,18 @@ def reduce_identical_array_vals(d):
     else:
         raise ValueError("dict has disparate values")
 
+def reduce_identical_arr(l):
+    """
+    Return the first value of a list
+    provided all the values are equal
+    and are numpy arrays.
+    """
+    val1 =  l[0]
+    all_same = all([np.array_equal(x, val1) for x in l])
+    if all_same == True:
+        return val1
+    else:
+        raise ValueError("list has disparate values")
 
 def remove_suffix(text, suffix):
     if text.endswith(suffix):
