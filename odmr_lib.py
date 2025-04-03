@@ -763,6 +763,7 @@ def parse_princeton_val_with_prefix(coefficient, prefix):
 
 
 def plot_fit(info, plot_unc_band=True, plot_args=None):
+    # TODO: add a new version of this function that takes fig and ax as parameters instead of creating them.
     if plot_args is None:
         plot_args = {}
     GHz = 1e-9  # Hz to GHz
@@ -798,6 +799,7 @@ def plot_fit(info, plot_unc_band=True, plot_args=None):
 
 
 def plot_initial_fit(info, plot_args=None):
+    # TODO: add a new version of this function that takes fig and ax as parameters instead of creating them.
     if plot_args is None:
         plot_args = {}
     GHz = 1e-9  # Hz to GHz
@@ -812,6 +814,7 @@ def plot_initial_fit(info, plot_args=None):
 
 
 def plot_initial_fit_with_n_components(info, plot_args=None):
+    # TODO: add a new version of this function that takes fig and ax as parameters instead of creating them.
     if plot_args is None:
         plot_args = {}
     # TODO: add initial fit components
@@ -827,6 +830,7 @@ def plot_initial_fit_with_n_components(info, plot_args=None):
 
 
 def plot_points_vs_sweep(sweeps, plot_args=None):
+    # TODO: add a new version of this function that takes fig and ax as parameters instead of creating them.
     if plot_args is None:
         plot_args = {}
     n_sweeps, n_points = sweeps.shape
