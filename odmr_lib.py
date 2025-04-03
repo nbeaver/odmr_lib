@@ -650,6 +650,12 @@ def get_yaml_filename(mat_filename):
     yaml_filename = root + ".yaml"
     return yaml_filename
 
+def get_yaml_filepath(mat_filepath):
+    parent, mat_filename = os.path.split(mat_filepath)
+    root, ext = os.path.splitext(mat_filename)
+    yaml_filename = root + '.yaml'
+    yaml_filepath = os.path.join(parent, yaml_filename)
+    return yaml_filepath
 
 def get_0_to_1(y_arr):
     # For e.g. comparing ODMR lineshapes with different contrast.
