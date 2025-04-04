@@ -26,6 +26,17 @@ class ODMR:
     def __str__(self):
         return self.__class__.__name__ + "(" + str(list(self.__dict__.keys())) + ")"
 
+class ParamInfo:
+    def __init__(self):
+        self.value = {}
+        self.min = {}
+        self.max = {}
+        self.vary = {}
+    def __repr__(self):
+        return self.__class__.__name__ + "(" + str(list(self.__dict__.keys())) + ")"
+
+    def __str__(self):
+        return self.__class__.__name__ + "(" + str(list(self.__dict__.keys())) + ")"
 
 # Function definitions
 #
@@ -309,9 +320,6 @@ def fit_n_gaussians(n, x, y, param_guesses, vary_center=True, vary_bkg=True):
     return fit_result
 
 
-# TODO: make a different function that can take an lmfit fit.params object
-# directly as param guesses, and can also take an object with attributes like:
-# param_info.value, param_info.min, param_info.max, param_info.vary, param_info.weights
 def fit_n_lorentzians(n, x, y, param_guesses, vary_center=True, vary_bkg=True):
     # TODO: warn if any parameters are at their minimum or maximum values
     from lmfit.models import LorentzianModel, ConstantModel
@@ -378,6 +386,114 @@ def fit_n_lorentzians(n, x, y, param_guesses, vary_center=True, vary_bkg=True):
     init = model.eval(params, x=x)
     fit_result = model.fit(y, params, x=x)
     return fit_result
+
+def fit_n_lorentzians2(n, x, y, param_info):
+    from lmfit.models import LorentzianModel, ConstantModel
+
+    def get_baseline_guess(y, n_points=10):
+        N = int(n_points/2)
+        first = y[:N].mean()
+        last = y[-N:].mean()
+        baseline = (first + last)/2.
+        return baseline
+
+    def get_amplitude_guess(sigma, y_peak, y_background):
+        import math
+        return math.pi*sigma*(y_peak-y_background)
+
+    def get_peak_guess(x, n, i):
+        guess_raw = np.linspace(x[0], x[-1], num=n+2)
+        guess = guess_raw[1:-1]
+        guess_i = guess[i]
+        return guess_i
+
+    # choose initial parameters
+    x_range = x.max() - x.min()
+    init_value = {
+        'constant_c' : get_baseline_guess(y),
+    }
+    for i in range(n):
+        init_value["l{}_center".format(i)] = get_peak_guess(x, n, i)
+        init_value["l{}_sigma".format(i)] = 5e6 # 5 MHz
+        init_value["l{}_dipmin".format(i)] = 0.95 # 5%
+    init_value.update(param_info.value)
+    for i in range(n):
+        init_value["l{}_amplitude".format(i)] = get_amplitude_guess(
+            init_value["l{}_sigma".format(i)],
+            init_value["l{}_dipmin".format(i)],
+            init_value['constant_c'],
+        )
+    init_value.update(param_info.value) # in case amplitude is already set by param_info
+
+    param_min = {
+        'constant_c' : y.min()
+    }
+    for i in range(n):
+        param_min["l{}_center".format(i)] = x.min()
+        param_min["l{}_sigma".format(i)] = 0.0
+        param_min["l{}_dipmin".format(i)] = 0.9*y.min()
+        param_min["l{}_amplitude".format(i)] = get_amplitude_guess(x_range/2., 0.0, 1.1*y.max())
+    param_min.update(param_info.min)
+
+    param_max = {
+        'constant_c' : 2.*y.max()
+    }
+    for i in range(n):
+        param_max["l{}_center".format(i)] = x.max()
+        param_max["l{}_sigma".format(i)] = x_range
+        param_max["l{}_dipmin".format(i)] = 1.1*y.max()
+        param_max["l{}_amplitude".format(i)] = 0.0 # amplitude is negative, so largest is 0.0
+    param_max.update(param_info.max)
+
+    param_vary = {
+        'constant_c' : True,
+    }
+    for i in range(n):
+        param_vary["l{}_center".format(i)] = True
+        param_vary["l{}_sigma".format(i)] = True
+        param_vary["l{}_amplitude".format(i)] = True
+    param_vary.update(param_info.vary)
+
+    background = ConstantModel(prefix="constant_")
+    background.set_param_hint(
+        'constant_c',
+        value=init_value['constant_c'],
+        min=param_min['constant_c'],
+        max=param_max['constant_c'],
+    )
+    # params
+    params = background.make_params(
+        constant_c = init_value['constant_c']
+    )
+    def set_param_hint(model, name):
+        model.set_param_hint(
+            name,
+            value = init_value[name],
+            min = param_min[name],
+            max = param_max[name],
+            vary = param_vary[name]
+        )
+    dip = {}
+    prefix = {}
+    params_lorentzian = {}
+    for i in range(n):
+        prefix[i] = "l{}_".format(i)
+        dip[i] = LorentzianModel(prefix=prefix[i])
+        set_param_hint(dip[i], '{}center'.format(prefix[i]))
+        set_param_hint(dip[i], '{}sigma'.format(prefix[i]))
+        set_param_hint(dip[i], '{}amplitude'.format(prefix[i]))
+        # make sure to do this after the hints
+        params_lorentzian[i] = dip[i].make_params()
+        params.update(params_lorentzian[i])
+
+    # model
+    model = background
+    for single_dip in dip.values():
+        model += single_dip
+    init = model.eval(params, x=x)
+    fit_result = model.fit(y, params, x=x)
+    return fit_result
+
 
 def get_B_from_2_peaks(nu1, nu2, E, D=None, g=None):
     """ Get the magentic bias field from 2 ODMR peak frequencies.
