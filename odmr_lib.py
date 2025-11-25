@@ -387,6 +387,94 @@ def fit_n_lorentzians(n, x, y, param_guesses, vary_center=True, vary_bkg=True):
     fit_result = model.fit(y, params, x=x)
     return fit_result
 
+def fit_n_lorentzians_linear_background(n, x, y, param_guesses, vary_center=True, weights=None):
+    # TODO: change this so it can take a fit.params object as param_guesses directly
+    # TODO: change this so it can take param_info.value, param_info.min, param_info.max, and param_info.var dicts
+    #       instead of param_guesses, vary_center, vary_bkg
+    # TODO: warn if any parameters are at their minimum or maximum values
+    from lmfit.models import LorentzianModel, LinearModel
+
+    def get_slope_guess(x, y):
+        dy = y[-1]-y[0]
+        dx = x[-1]-x[0]
+        slope_guess = dy/dx
+        return slope_guess
+
+    def get_intercept_guess(x, y, slope=None):
+        if slope is None:
+            slope = get_slope_guess(x, y)
+        intercept_guess = y[0] - slope*x[0]
+        return intercept_guess
+
+    def get_y_bkg(x_peak, slope, intercept):
+        y_bkg = slope*x_peak + intercept
+        return y_bkg
+
+    def get_amplitude_guess(sigma, y_peak, y_background):
+        import math
+        return math.pi*sigma*(y_peak-y_background)
+
+    # guesses
+    guess_slope = get_slope_guess(x, y)
+    guess_intercept = get_intercept_guess(x, y, slope=guess_slope)
+
+    guess_center = {}
+    guess_sigma = {}
+    guess_dipmin = {}
+    guess_y_bkg = {}
+    guess_amplitude = {}
+    for i in range(n):
+        guess_center[i] = param_guesses["l{}_center".format(i)]
+        guess_sigma[i] = param_guesses["l{}_sigma".format(i)]
+        guess_dipmin[i] = param_guesses["l{}_dipmin".format(i)]
+        guess_y_bkg[i] = get_y_bkg(guess_center[i], guess_slope, guess_intercept)
+        guess_amplitude[i] = 0.8*get_amplitude_guess(guess_sigma[i], guess_dipmin[i], guess_y_bkg[i])
+
+    background = LinearModel(prefix="linear_")
+    # params
+    params = background.make_params(
+        linear_slope = guess_slope,
+        linear_intercept = guess_intercept
+    )
+    dip = {}
+    prefix = {}
+    params_lorentzian = {}
+    for i in range(n):
+        prefix[i] = "l{}_".format(i)
+        dip[i] = LorentzianModel(prefix=prefix[i])
+        dip[i].set_param_hint(
+            '{}center'.format(prefix[i]),
+            value=guess_center[i]
+        )
+        dip[i].set_param_hint(
+            '{}sigma'.format(prefix[i]),
+            value=guess_sigma[i]
+        )
+        dip[i].set_param_hint(
+            '{}amplitude'.format(prefix[i]),
+            value=guess_amplitude[i]
+        )
+        params_lorentzian[i] = dip[i].make_params()
+        params.update(params_lorentzian[i])
+
+    # constraints
+    for i in range(n):
+        params["l{}_center".format(i)].set(
+            vary=vary_center,
+        )
+#     for i in range(n_lorentzians):
+#         params["l{}_sigma".format(i)].set(
+#             max=6e6
+#         )
+
+    # model
+    model = background
+    for single_dip in dip.values():
+        model += single_dip
+    init = model.eval(params, x=x)
+    fit_result = model.fit(y, params, x=x, weights=weights)
+    return fit_result
+
 def fit_n_lorentzians2(n, x, y, param_info):
     from lmfit.models import LorentzianModel, ConstantModel
 
