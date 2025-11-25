@@ -49,6 +49,7 @@ def closest_index(arr, val):
     elif val < arr.min():
         raise ValueError("not in range: {} < {}".format(val, arr.min()))
     index = np.argmin(abs(arr - val))  # TODO: use binary search or something else?
+    # TODO: use np.searchsorted instead?
     return index
 
 
