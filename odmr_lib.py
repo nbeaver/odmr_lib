@@ -918,6 +918,42 @@ def get_yaml_filepath(mat_filepath):
     yaml_filepath = os.path.join(parent, yaml_filename)
     return yaml_filepath
 
+def get_ylim(xlim_left, xlim_right, x_arr_list, y_arr_list, debug=False):
+    assert xlim_left < xlim_right
+    if debug:
+        print("xlim_left = {}".format(xlim_left))
+        print("xlim_right = {}".format(xlim_right))
+        print("len(x_arr_list) = {}".format(len(x_arr_list)))
+        print("len(y_arr_list) = {}".format(len(y_arr_list)))
+        print("x_arr_list[0].shape = {}".format(x_arr_list[0].shape))
+        print("y_arr_list[0].shape = {}".format(y_arr_list[0].shape))
+    ylim_bottom = None
+    ylim_top = None
+    for x_arr, y_arr in zip(x_arr_list, y_arr_list):
+        i_left  = np.searchsorted(x_arr, xlim_left)
+        i_right = np.searchsorted(x_arr, xlim_right)
+        if debug:
+            print("i_left = {}".format(i_left))
+            print("i_right = {}".format(i_right))
+        y_slice = y_arr[i_left: i_right]
+        if debug:
+            print("y_slice.shape = {}".format(y_slice.shape))
+        assert len(y_slice) > 0
+        y_min = y_slice.min()
+        y_max = y_slice.max()
+        if ylim_bottom is None:
+            ylim_bottom = y_min
+        elif y_min < ylim_bottom:
+            ylim_bottom = y_min
+        if ylim_top is None:
+            ylim_top = y_max
+        elif y_max > ylim_top:
+            ylim_top = y_max
+        if debug:
+            print("ylim_bottom = {}".format(ylim_bottom))
+            print("ylim_top = {}".format(ylim_top))
+    return ylim_bottom, ylim_top
+
 def get_0_to_1(y_arr):
     # For e.g. comparing ODMR lineshapes with different contrast.
     ymin = y.min()
