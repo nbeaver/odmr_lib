@@ -583,6 +583,62 @@ def fit_n_lorentzians2(n, x, y, param_info):
     fit_result = model.fit(y, params, x=x)
     return fit_result
 
+def fit_sinc(x, y, param_info):
+    from lmfit.models import ExpressionModel
+    from math import pi
+
+    # choose initial parameters
+    init_value = {
+        'C' : np.mean(y),
+        'A' : (y.max()-y.min())/2.0,
+        'x0': x.mean(),
+        'k' : (x.max()-x.min())/2.0,
+    }
+    init_value.update(param_info.value)
+    param_min = {
+        'C' : -np.inf,
+        'A' : -np.inf,
+        'x0': -np.inf,
+        'k' : 0.0,
+    }
+    param_min.update(param_info.min)
+    param_max = {
+        'C' : np.inf,
+        'A' : np.inf,
+        'x0': np.inf,
+        'k' : np.inf,
+    }
+    param_max.update(param_info.max)
+    vary = {
+        'C' : True,
+        'A' : True,
+        'x0': True,
+        'k' : True,
+    }
+    vary.update(param_info.vary)
+
+    # define model
+    sinc_model = ExpressionModel('C + A * sin(k * (x-x0))/(k*(x-x0))')
+
+    # constraints
+    for name in sinc_model.param_names:
+        sinc_model.set_param_hint(
+            name,
+            value=init_value[name],
+            min=param_min[name],
+            max=param_max[name],
+            vary=vary[name],
+        )
+    # make sure to do this after the hints
+    params = sinc_model.make_params(
+        C=init_value['C'],
+        A=init_value['A'],
+        x0=init_value['x0'],
+        k=init_value['k'],
+    )
+    init = sinc_model.eval(params, x=x)
+    fit_result = sinc_model.fit(y, params, x=x)
+    return fit_result
 
 def get_B_from_2_peaks(nu1, nu2, E, D=None, g=None):
     """ Get the magentic bias field from 2 ODMR peak frequencies.
