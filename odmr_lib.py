@@ -32,6 +32,7 @@ class ParamInfo:
         self.min = {}
         self.max = {}
         self.vary = {}
+
     def __repr__(self):
         return self.__class__.__name__ + "(" + str(list(self.__dict__.keys())) + ")"
 
