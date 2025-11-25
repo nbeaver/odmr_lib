@@ -548,6 +548,7 @@ def fit_n_lorentzians2(n, x, y, param_info):
         value=init_value['constant_c'],
         min=param_min['constant_c'],
         max=param_max['constant_c'],
+        vary=param_vary['constant_c'],
     )
     # params
     params = background.make_params(
