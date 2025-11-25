@@ -1190,13 +1190,16 @@ def plot_n_components(info, n=None, plot_args=None):
     return figinfo
 
 
-def reduce_identical_vals_list(l):
+def reduce_identical_vals_list(l, array=False):
     first = l[0]
-    if all(first == x for x in l):
+    if not array:
+        all_same = all(first == x for x in l)
+    else:
+        all_same = all([np.array_equal(x, first) for x in l])
+    if all_same == True:
         return first
     else:
-        raise ValueError
-
+        raise ValueError("list has disparate values")
 
 def reduce_identical_vals(d):
     """
